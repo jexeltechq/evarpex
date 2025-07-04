@@ -1,0 +1,40 @@
+Escrow System Integration Summary
+---------------------------------
+
+1. Created Escrow System Database Table
+   - Location: Database (via migration or manual SQL)
+   - Action: Added `escrows` table to track escrow transactions between buyer and seller.
+
+2. Created Escrow Model
+   - Location: core/app/Models/Escrow.php
+   - Action: Added Eloquent model for the `escrows` table.
+
+3. Linked Escrow to Payment (Deposit)
+   - Location: core/app/Models/Deposit.php and core/database/migrations/ (or manual SQL)
+   - Action: Added `escrow_id` to `deposits` table to link deposits to escrows.
+
+4. Escrow Creation Logic
+   - Location: core/app/Http/Controllers/AdController.php (buyWithEscrow method)
+   - Action: Checks if buyer is not the seller, marks ad as unavailable (`$ad->status = 'pending'`), creates an escrow record, redirects to Paystack payment.
+
+5. Paystack Payment Integration
+   - Location: core/app/Http/Controllers/Gateway/paystack/ProcessController.php and core/app/Http/Controllers/Gateway/PaymentController.php
+   - Action: Handles payment processing. On payment success, updates deposit and escrow status to `funded`.
+
+6. Escrow Release & Cancel Logic
+   - Location: core/app/Http/Controllers/EscrowController.php
+   - Action: 
+     - release($id): Buyer confirms delivery, sets escrow to `released`, ad to `sold`.
+     - cancel($id): Buyer cancels, sets escrow to `canceled`, ad to `available`.
+
+7. Ad Details View Updates
+   - Location: core/resources/views/templates/basic/adDetails.blade.php
+   - Action: 
+     - Shows "Buy Now (Escrow)" button only if ad is available.
+     - Shows "Confirm Delivery & Release Payment" button to buyer when escrow is funded.
+
+8. Routes
+   - Location: core/routes/web.php
+   - Action: 
+     - Added route for buying with escrow: ad.buy.escrow
+     - Added route for releasing escrow: escrow.release
